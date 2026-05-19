@@ -104,10 +104,48 @@ colA, colB = st.columns(2)
 
 with colA:
     st.subheader("Care Pipeline Flow Visualization")
-    fig_flow = go.Figure()
-    fig_flow.add_trace(go.Scatter(x=filtered_df['Date'], y=filtered_df['Intake_CBP'], name='Intake (CBP)', mode='lines', line=dict(color='orange')))
-    fig_flow.add_trace(go.Scatter(x=filtered_df['Date'], y=filtered_df['In_HHS_Care'], name='Active HHS Care', mode='lines', line=dict(color='blue')))
-    fig_flow.update_layout(height=400, margin=dict(l=0, r=0, t=30, b=0), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+    
+    # Import the subplot tool from plotly
+    from plotly.subplots import make_subplots
+    
+    # Create a figure canvas with a secondary Y-axis enabled
+    fig_flow = make_subplots(specs=[[{"secondary_y": True}]])
+    
+    # 1. Add Daily Intake (CBP) to the LEFT Y-axis (Primary)
+    fig_flow.add_trace(
+        go.Scatter(
+            x=filtered_df['Date'], 
+            y=filtered_df['Intake_CBP'], 
+            name='Daily Intake (CBP)', 
+            line=dict(color='orange', width=2)
+        ),
+        secondary_y=False,
+    )
+    
+    # 2. Add Active HHS Care to the RIGHT Y-axis (Secondary)
+    fig_flow.add_trace(
+        go.Scatter(
+            x=filtered_df['Date'], 
+            y=filtered_df['In_HHS_Care'], 
+            name='Active HHS Care Load', 
+            line=dict(color='blue', width=2)
+        ),
+        secondary_y=True,
+    )
+    
+    # Update layout and position the legend beautifully at the top
+    fig_flow.update_layout(
+        height=400,
+        margin=dict(l=0, r=0, t=30, b=0),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        hovermode="x unified"
+    )
+    
+    # Apply clean, professional titles to both individual Y-axes
+    fig_flow.update_yaxes(title_text="Daily Intake Volume (Children)", secondary_y=False)
+    fig_flow.update_yaxes(title_text="Total Active HHS Care Load", secondary_y=True)
+    
+    # Render the interactive chart inside Streamlit
     st.plotly_chart(fig_flow, use_container_width=True)
 
 with colB:
