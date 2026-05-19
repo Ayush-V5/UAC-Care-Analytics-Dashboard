@@ -103,50 +103,58 @@ st.divider()
 colA, colB = st.columns(2)
 
 with colA:
-    st.subheader("Care Pipeline Flow Visualization")
+    st.subheader("Care Pipeline Efficiency (30-Day Avg)")
     
-    # Import the subplot tool from plotly
     from plotly.subplots import make_subplots
-    
-    # Create a figure canvas with a secondary Y-axis enabled
-    fig_flow = make_subplots(specs=[[{"secondary_y": True}]])
-    
-    # 1. Add Daily Intake (CBP) to the LEFT Y-axis (Primary)
-    fig_flow.add_trace(
+    import plotly.graph_objects as go
+
+    # 1. Create the 2-row subplot from your trial code
+    fig_trial = make_subplots(
+        rows=2, cols=1, 
+        shared_xaxes=True, 
+        vertical_spacing=0.12,
+        subplot_titles=('Transfer Efficiency (CBP -> HHS)', 'Discharge Effectiveness (HHS -> Sponsor)')
+    )
+
+    # 2. TOP Chart: Transfer Efficiency (Blue)
+    fig_trial.add_trace(
         go.Scatter(
             x=filtered_df['Date'], 
-            y=filtered_df['Intake_CBP'], 
-            name='Daily Intake (CBP)', 
-            line=dict(color='orange', width=2)
+            y=filtered_df['Transfer_Efficiency'].rolling(window=30).mean(), 
+            name='Transfer Efficiency',
+            line=dict(color='#1f77b4', width=2.5)
         ),
-        secondary_y=False,
+        row=1, col=1
     )
-    
-    # 2. Add Active HHS Care to the RIGHT Y-axis (Secondary)
-    fig_flow.add_trace(
+
+    # 3. BOTTOM Chart: Discharge Effectiveness (Orange)
+    fig_trial.add_trace(
         go.Scatter(
             x=filtered_df['Date'], 
-            y=filtered_df['In_HHS_Care'], 
-            name='Active HHS Care Load', 
-            line=dict(color='blue', width=2)
+            y=filtered_df['Discharge_Effectiveness'].rolling(window=30).mean(), 
+            name='Discharge Effectiveness',
+            line=dict(color='#ff7f0e', width=2.5)
         ),
-        secondary_y=True,
+        row=2, col=1
     )
-    
-    # Update layout and position the legend beautifully at the top
-    fig_flow.update_layout(
-        height=400,
-        margin=dict(l=0, r=0, t=30, b=0),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+
+    # 4. Apply your exact styling and limits
+    fig_trial.update_layout(
+        height=500,  # Adjusted to fit perfectly inside the column
+        showlegend=False, 
+        margin=dict(l=0, r=0, t=40, b=0),
         hovermode="x unified"
     )
-    
-    # Apply clean, professional titles to both individual Y-axes
-    fig_flow.update_yaxes(title_text="Daily Intake Volume (Children)", secondary_y=False)
-    fig_flow.update_yaxes(title_text="Total Active HHS Care Load", secondary_y=True)
-    
-    # Render the interactive chart inside Streamlit
-    st.plotly_chart(fig_flow, use_container_width=True)
+
+    # Apply your exact Y-axis limits
+    fig_trial.update_yaxes(title_text="Ratio", range=[0.4, 1.0], row=1, col=1)
+    fig_trial.update_yaxes(title_text="Index", range=[0.01, 0.07], row=2, col=1)
+
+    # Format the dates
+    fig_trial.update_xaxes(tickformat="%b\n%Y")
+
+    # Render inside colA
+    st.plotly_chart(fig_trial, use_container_width=True)
 
 with colB:
     st.subheader("Bottleneck Detection (Intake vs Exits Gap)")
