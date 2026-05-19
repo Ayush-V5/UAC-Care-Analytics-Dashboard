@@ -103,17 +103,17 @@ st.divider()
 colA, colB = st.columns(2)
 
 with colA:
-    st.subheader("Care Pipeline Efficiency (30-Day Avg)")
+    st.subheader("Care Pipeline Efficiency Over Time")
     
     from plotly.subplots import make_subplots
     import plotly.graph_objects as go
 
-    # 1. Create the 2-row subplot from your trial code
+    # 1. Create a 2-row subplot. 
+    # CRITICAL: We do NOT use shared_xaxes=True so we can put dates in the middle!
     fig_trial = make_subplots(
         rows=2, cols=1, 
-        shared_xaxes=True, 
-        vertical_spacing=0.12,
-        subplot_titles=('Transfer Efficiency (CBP -> HHS)', 'Discharge Effectiveness (HHS -> Sponsor)')
+        vertical_spacing=0.15, # Space for the dates in the middle
+        subplot_titles=('<b>Transfer Efficiency (CBP -> HHS)</b>', '') # Upper graph name at top
     )
 
     # 2. TOP Chart: Transfer Efficiency (Blue)
@@ -138,24 +138,35 @@ with colA:
         row=2, col=1
     )
 
-    # 4. Apply your exact styling and limits
+    # 4. Apply your exact styling
     fig_trial.update_layout(
-        height=500,  # Adjusted to fit perfectly inside the column
+        height=550, 
         showlegend=False, 
-        margin=dict(l=0, r=0, t=40, b=0),
+        margin=dict(l=0, r=0, t=40, b=40),
         hovermode="x unified"
     )
 
-    # Apply your exact Y-axis limits
+    # --- MATCHING YOUR EXACT MATPLOTLIB AXES LOGIC ---
+    
+    # Top Chart Axes (row=1)
     fig_trial.update_yaxes(title_text="Ratio", range=[0.4, 1.0], row=1, col=1)
-    fig_trial.update_yaxes(title_text="Index", range=[0.01, 0.07], row=2, col=1)
+    fig_trial.update_xaxes(
+        tickformat="%b-%Y", 
+        showticklabels=True, # THIS PUTS THE DATES IN THE MIDDLE
+        row=1, col=1
+    )
 
-    # Format the dates
-    fig_trial.update_xaxes(tickformat="%b\n%Y")
+    # Bottom Chart Axes (row=2)
+    fig_trial.update_yaxes(title_text="Index", range=[0.01, 0.07], row=2, col=1)
+    fig_trial.update_xaxes(
+        showticklabels=False, # THIS HIDES THE DATES AT THE BOTTOM
+        title_text="<b>Discharge Effectiveness (HHS -> Sponsor)</b>", # LOWER GRAPH NAME AT THE BOTTOM
+        title_font=dict(size=14),
+        row=2, col=1
+    )
 
     # Render inside colA
     st.plotly_chart(fig_trial, use_container_width=True)
-
 with colB:
     st.subheader("Bottleneck Detection (Intake vs Exits Gap)")
     # Coloring bars: Red if backlog is accumulating (Intake > Exits), Green if clearing
